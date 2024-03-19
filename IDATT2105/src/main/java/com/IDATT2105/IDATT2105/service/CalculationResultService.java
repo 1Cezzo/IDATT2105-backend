@@ -22,16 +22,16 @@ public class CalculationResultService {
     }
 
     public double calculate(String equation) {
-          log.info("Handling request to calculate: " + equation);
-          try {
-            Expression expression = new ExpressionBuilder(equation).build();
-            double result = expression.evaluate();
-            return result;
-          } catch (Exception e) {
-            log.error("Error occurred while calculating: " + equation);
-            return 0;
-          }
+      log.info("Handling request to calculate: " + equation);
+      try {
+          Expression expression = new ExpressionBuilder(equation).build();
+          double result = expression.evaluate();
+          return result;
+      } catch (ArithmeticException | IllegalArgumentException e) {
+          log.error("Error occurred while calculating: " + equation, e);
+          throw new IllegalArgumentException("Invalid equation: " + equation);
       }
+    }
 
     public CalculationResult saveCalculationResult(CalculationResult calculationResult) {
       return calculationResultRepository.save(calculationResult);
