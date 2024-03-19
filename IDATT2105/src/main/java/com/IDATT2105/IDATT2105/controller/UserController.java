@@ -69,5 +69,15 @@ public class UserController {
         }
     }
 
+    @GetMapping("/userId")
+    public ResponseEntity<Long> getUserIdByUsername(@RequestParam String username) {
+        Long userId = userService.getUserIdByUsername(username);
+        if (userId != null) {
+            return ResponseEntity.status(HttpStatus.OK).body(userId);
+        } else {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(null);
+        }
+    }
+
     
 }
