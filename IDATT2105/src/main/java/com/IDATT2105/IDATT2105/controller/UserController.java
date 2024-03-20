@@ -3,31 +3,34 @@ package com.IDATT2105.IDATT2105.controller;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.IDATT2105.IDATT2105.config.SecurityConfig;
 import com.IDATT2105.IDATT2105.model.User;
 import com.IDATT2105.IDATT2105.service.UserService;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 
-
 @RestController
 public class UserController {
 
     private final UserService userService;
+    private final BCryptPasswordEncoder passwordEncoder;
 
     @Autowired
-    public UserController(UserService userService) {
+    public UserController(UserService userService, BCryptPasswordEncoder passwordEncoder) {
         this.userService = userService;
+        this.passwordEncoder = passwordEncoder;
     }
 
     @PostMapping("/login")
     public String login(@RequestBody User user) {
         User existingUser = userService.getUserByUsername(user.getUsername());
         
-        if (existingUser != null && existingUser.getPassword().equals(user.getPassword())) {
+        if (existingUser != null && passwordEncoder.matches(user.getPassword(), existingUser.getPassword())) {
             return "Login successful";
         } else {
             return "Invalid username or password";
@@ -39,6 +42,9 @@ public class UserController {
         if (userService.getUserByUsername(user.getUsername()) != null) {
             return "Username already exists";
         }
+        
+        String hashedPassword = passwordEncoder.encode(user.getPassword());
+        user.setPassword(hashedPassword);
         
         userService.saveUser(user);
         
@@ -77,7 +83,5 @@ public class UserController {
         } else {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(null);
         }
-    }
-
-    
+    } 
 }
