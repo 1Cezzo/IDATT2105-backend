@@ -3,14 +3,18 @@ package com.IDATT2105.IDATT2105.controller;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.IDATT2105.IDATT2105.config.SecurityConfig;
+import com.IDATT2105.IDATT2105.service.CustomUserDetailsService;
 import com.IDATT2105.IDATT2105.model.User;
 import com.IDATT2105.IDATT2105.service.UserService;
+
+
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 
@@ -18,37 +22,38 @@ import org.springframework.web.bind.annotation.RequestParam;
 public class UserController {
 
     private final UserService userService;
-    private final BCryptPasswordEncoder passwordEncoder;
+    private final CustomUserDetailsService customUserDetailsService;
 
     @Autowired
-    public UserController(UserService userService, BCryptPasswordEncoder passwordEncoder) {
+    public UserController(UserService userService, CustomUserDetailsService customUserDetailsService) {
         this.userService = userService;
-        this.passwordEncoder = passwordEncoder;
+        this.customUserDetailsService = customUserDetailsService;
     }
 
     @PostMapping("/login")
     public String login(@RequestBody User user) {
         User existingUser = userService.getUserByUsername(user.getUsername());
         
-        if (existingUser != null && passwordEncoder.matches(user.getPassword(), existingUser.getPassword())) {
+        if (existingUser != null && user.getPassword().equals(existingUser.getPassword())) {
             return "Login successful";
         } else {
             return "Invalid username or password";
         }
     }
 
-    @PostMapping("/register")
-    public String register(@RequestBody User user) {
+
+    @PostMapping("/register/user")
+    public ResponseEntity<String> register(@RequestBody User user) {
         if (userService.getUserByUsername(user.getUsername()) != null) {
-            return "Username already exists";
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Username already exists");
         }
         
-        String hashedPassword = passwordEncoder.encode(user.getPassword());
-        user.setPassword(hashedPassword);
+        user.setUsername(user.getUsername());
+        user.setPassword(user.getPassword());
         
         userService.saveUser(user);
         
-        return "User registered successfully";
+        return ResponseEntity.ok("User registered successfully");
     }
 
     @GetMapping("/checkUsername")
