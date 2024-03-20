@@ -41,7 +41,6 @@ public class UserController {
         }
     }
 
-
     @PostMapping("/register/user")
     public ResponseEntity<String> register(@RequestBody User user) {
         if (userService.getUserByUsername(user.getUsername()) != null) {
